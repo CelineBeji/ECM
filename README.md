@@ -2,7 +2,7 @@
 
 The Expectation-Causality-Maximization (ECM) is a algorithm that estimates the parameters of causal populations, from which the Individual Treatment Effect can be inferred. A more description is provided in the paper [Estimating Individual Treatment Effects through Causal Populations Identification](https://pages.github.com/).
 
-This repository contains the code source use to comprae ECM with baselin methods on synthetic and real-world datasets.
+This repository contains the code source use to compare ECM with baselin methods on synthetic and real-world datasets.
 
 ## Requirements
 
