@@ -7,8 +7,8 @@ This repository contains the code source use to compare ECM with baselin methods
 ## Requirements
 
 - This project was designed for use with Python 3.7. 
-- To run models you will need to install `sklearn`, `numpy`.
-- to run results you will need to install `pandas`, `os`.
+- To run the models you will need to install `sklearn`, `numpy`.
+- To run the results you will need to install `pandas`, `os`.
 
 ## Datasets
 
