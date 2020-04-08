@@ -13,10 +13,10 @@ This repository contains the code source use to comprae ECM with baselin methods
 ## Datasets
 
 - 
-- IHDP: We also use the IHDP semi-synthetic dataset compiled by J.Hill for causal effect estimation described on her paper[Bayesian Nonparametric Modeling for Causal Inference](https://www.researchgate.net/profile/Jennifer_Hill3/publication/236588890_Bayesian_Nonparametric_Modeling_for_Causal_Inference/links/0deec5187f94192f12000000.pdf).
+- IHDP: We also use the IHDP semi-synthetic dataset compiled by J.Hill for causal effect estimation described on her paper [Bayesian Nonparametric Modeling for Causal Inference](https://www.researchgate.net/profile/Jennifer_Hill3/publication/236588890_Bayesian_Nonparametric_Modeling_for_Causal_Inference/links/0deec5187f94192f12000000.pdf).
 
 ## Run all experiments
 
-To reproduce all experiments of the paper just type: python all_experiments.py
+To reproduce all experiments of the paper just type: `python all_experiments.py`
 
 
