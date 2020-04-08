@@ -17,6 +17,6 @@ This repository contains the code source use to comprae ECM with baselin methods
 
 ## Run all experiments
 
-To reproduce all experiments of the paper just type: `python all_experiments.py`
+To reproduce all experiments of the paper just type: `python run_all_experiments.py`
 
 
