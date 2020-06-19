@@ -39,92 +39,59 @@ class GaussianMixtureCEM:
         """
 
         timeInit = time.time()  # initial time
-        n, p = data[predictors].shape  # size of data
-        t = np.ones((n, self.k))  # latent variables
-        Q = np.zeros((n, self.k))  # used to calculate the log-likelihood
+        predictor_data = data[predictors]
+        n, p = predictor_data.shape  # size of data
         # initialization of latent variables
         tDistrib = 0.5 * np.ones((n, self.k))
+
+        T = (data['treatment'] == 1).values
+        Y = (data['outcome'] == 1).values
+        mask = np.array([(T == Y), (1 - Y), Y, (T != Y)]).T
 
         # condition on the maximum number of iterations
         while len(self.logLikelihoods) < self.max_iter:
 
             # -----------------
-            # Expectation step
+            # Expectation step (1st part)
             # -----------------
 
-            if len(self.logLikelihoods) != 0:  # iterations (not initialization)
-                for j in range(self.k):
-                    tDistrib[:, j] = self.pis[j] * \
-                        mvn.pdf(data[predictors], self.mus[j], self.sigma[j])
-
             # causality constraints
-            for i in range(n):
-
-                if data['treatment'].iloc[i] == 0:  # Control group t = 0
-                    if data['outcome'].iloc[i] == 0:  # y = 0
-                        # Responder + Doomed
-                        t[i, 0] = tDistrib[i, 0]
-                        t[i, 1] = tDistrib[i, 1]
-                        t[i, 2] = 0
-                        t[i, 3] = 0
-
-                    else:  # y = 1
-                        # Survivor + Antiresponder
-                        t[i, 0] = 0
-                        t[i, 1] = 0
-                        t[i, 2] = tDistrib[i, 2]
-                        t[i, 3] = tDistrib[i, 3]
-
-                else:  # Treatment group t = 1
-                    if data['outcome'].iloc[i] == 0:  # y = 0
-                        # Doomed + Antiresponder
-                        t[i, 0] = 0
-                        t[i, 1] = tDistrib[i, 1]
-                        t[i, 2] = 0
-                        t[i, 3] = tDistrib[i, 3]
-
-                    else:  # y = 1
-                        # Responder + Survivor
-                        t[i, 0] = tDistrib[i, 0]
-                        t[i, 1] = 0
-                        t[i, 2] = tDistrib[i, 2]
-                        t[i, 3] = 0
-
-                t = (t.T / np.sum(t, axis=1)).T  # normalization
+            t = tDistrib * mask
+            t = (t.T / np.sum(t, axis=1)).T  # normalization
 
             # -----------------
             # Maximization step
             # -----------------
 
             # Update mixing coefficients
-            for j in range(self.k):
-                self.pis[j] = sum(t[:, j])/n
+            t_sums = t.sum(axis=0)
+            self.pis = t_sums.reshape((self.k, 1)) / n
 
             # Update means of Gaussians
-            self.mus = np.dot(t.transpose(), data[predictors])
-            for j in range(self.k):
-                self.mus[j, :] = self.mus[j, :]/sum(t[:, j])
+            self.mus = np.dot(t.transpose(), predictor_data) / t_sums[:, None]
 
             # Update covariance of Gaussians
-            self.sigma = [np.eye(p)] * self.k
+            rest = 10 ** (-2) * np.eye(p)
+            self.sigma = [
+                np.cov(predictor_data, aweights=t[:, j], rowvar=False, bias=True) + rest
+                for j in range(self.k)
+            ]
+
+            # -----------------
+            # Expectation step (2nd part -> for next iteration)
+            # -----------------
+
             for j in range(self.k):
-                xCentered = np.matrix(data[predictors] - self.mus[j])
-                self.sigma[j] = np.array(
-                    1 / sum(t[:, j]) * np.dot(np.multiply(xCentered.T, t[:, j]), xCentered))
-                self.sigma[j] = self.sigma[j] + (10**(-2)*np.eye(p))
+                tDistrib[:, j] = self.pis[j] * \
+                    mvn.pdf(predictor_data, self.mus[j], self.sigma[j])
 
             # -----------------
             # Check for convergence
             # -----------------
 
             # Calculate log-likelihood
-            for j in range(self.k):
-                # print("pis"+self.pis[j])
-                # print("mus"+self.mus[j])
-                # print("sigma"+self.sigma[j])
-                Q[:, j] = np.multiply(t[:, j], np.log(
-                    self.pis[j] * mvn.pdf(data[predictors], self.mus[j], self.sigma[j])))
-            self.logLikelihoods.append(np.sum(np.sum(Q, axis=1)))
+            logLikelihood = (t * np.log(tDistrib)).sum()
+            self.logLikelihoods.append(logLikelihood)
 
             # force at least one iteration
             if len(self.logLikelihoods) < 2:
